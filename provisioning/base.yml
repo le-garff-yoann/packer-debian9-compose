@@ -1,0 +1,60 @@
+---
+
+- hosts: all
+  become: yes
+  vars:
+    docker_download_url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}"
+  handlers:
+    - name: Update grub
+      command: update-grub
+  tasks:
+    - name: Fix grub default for k8s
+      lineinfile:
+        path: /etc/default/grub
+        regexp: 'cgroup_enable=memory\s+swapaccount=1'
+        line: 'GRUB_CMDLINE_LINUX="${GRUB_CMDLINE_LINUX} cgroup_enable=memory swapaccount=1"'
+      notify: Update grub
+
+    - name: Configure sysctl
+      sysctl:
+        name: vm.max_map_count
+        value: "262144"
+        state: present
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      changed_when: false
+
+    - name: Install packages
+      apt:
+        pkg: "{{ item }}"
+        state: latest
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - vim
+
+    - name: Get Docker apt key
+      apt_key:
+        id: 0EBFCD88
+        url: "{{ docker_download_url }}/gpg"
+        validate_certs: no
+
+    - name: Setup Docker apt repository
+      apt_repository:
+        repo: "deb [arch=amd64] {{ docker_download_url }} {{ ansible_distribution_release }} stable"
+        state: present
+      
+    - name: Install docker-ce
+      apt:
+        name: docker-ce
+        state: latest
+        update_cache: yes
+
+    - name: Install docker-compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/1.21.2/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+        dest: /usr/local/bin/docker-compose
+        mode: 0755
