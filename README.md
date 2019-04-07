@@ -1,6 +1,6 @@
 # Packer template for Debian 9 with Docker Compose
 
-![Build Status](https://gitlab.com/le-garff-yoann/packer-debian9-compose/badges/master/build.svg)
+[![pipeline status](https://gitlab.com/le-garff-yoann/packer-debian9-compose/badges/master/pipeline.svg)](https://gitlab.com/le-garff-yoann/packer-debian9-compose/pipelines)
 
 Inspired by [geerlingguy/packer-debian-9](https://github.com/geerlingguy/packer-debian-9).
 
